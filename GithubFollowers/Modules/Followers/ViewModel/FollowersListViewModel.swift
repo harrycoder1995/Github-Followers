@@ -10,6 +10,7 @@ import Foundation
 protocol FollowersListDelegate: AnyObject {
     func reloadData()
     func showError(message: String)
+    func didAddToFavorites(message: String)
 }
 
 class FollowersListViewModel {
@@ -64,6 +65,37 @@ class FollowersListViewModel {
         }
     }
     
+    func getUserInfo(for username: String) {
+        let userService = UserRequestConfig(username: username)
+        
+        manager.fetchData(requestConfig: userService) { [weak self] (result: Result<User?, GFError>) in
+            
+            guard let weakSelf = self else { return }
+            
+            switch result {
+            case .success(let user):
+                
+                guard let followerCount = user?.followers, followerCount > 0  else {
+                    weakSelf.delegate?.showError(message: "Unable to add the user to favorites!!!. As user don't have any follower")
+                    return
+                }
+                let follower = Follower(login: user!.login, avatarUrl: user!.avatarUrl)
+                
+            
+                PersistenceManager.shared.update(follower: follower) { error in
+                    guard let error = error else {
+                        weakSelf.delegate?.didAddToFavorites(message: "Successfully added to Favorites List")
+                        return
+                    }
+                    
+                    weakSelf.delegate?.showError(message: error.rawValue)
+                }
+            case .failure(let failure):
+                weakSelf.delegate?.showError(message: failure.rawValue)
+            }
+        }
+    }
+    
     func fetchMoreFollowers(for username: String) {
         guard hasMoreFollowers else { return }
         page += 1
@@ -74,5 +106,11 @@ class FollowersListViewModel {
         filteredFollowers = followersList!.filter { $0.login.lowercased().contains(filterText.lowercased()) }
         
         return filteredFollowers
+    }
+    
+    func resetDataSource() {
+        followersList?.removeAll()
+        filteredFollowers.removeAll()
+        page = 1
     }
 }

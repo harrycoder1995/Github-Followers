@@ -32,5 +32,10 @@ class GFButton: UIButton {
         titleLabel?.textColor = .white
         translatesAutoresizingMaskIntoConstraints = false
     }
+    
+    func configure(backgroundColor: UIColor, title: String) {
+        self.backgroundColor = backgroundColor
+        setTitle(title, for: .normal)
+    }
 
 }

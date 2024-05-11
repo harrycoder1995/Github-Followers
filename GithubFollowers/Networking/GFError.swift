@@ -12,6 +12,7 @@ enum GFError: String, Error {
     case unableToFetch = "Unable to fetch data, Please try again after sometime."
     case invalidResponse = "Invalid response recieved from the server."
     case unableToParseData = "Unable to parse the data recieved from the server."
-    
     case noFollowersFound = "User doesn't follow to any one!!."
+    case unableToRetrieveFavorites = "Thers is no favorites for the user."
+    case userIsAlreadyAddedToFavorites = "User is already added to the followers list."
 }

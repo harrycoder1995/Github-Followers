@@ -33,6 +33,8 @@ class NetworkManager {
             do {
                 let decodedData: T = try ResponseDecoder.decodeResponse(data, response)
                 completionHanlder(.success(decodedData))
+            } catch let parseError as GFError {
+                completionHanlder(.failure(parseError))
             } catch {
                 completionHanlder(.failure(.unableToParseData))
             }

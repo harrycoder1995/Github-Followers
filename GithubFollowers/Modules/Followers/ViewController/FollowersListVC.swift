@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol FollowersListVCDelegate: AnyObject {
+    func didFetchFollowers(for username: String)
+}
+
 class FollowersListVC: UIViewController {
     
     //MARK: - Sections
@@ -36,6 +40,14 @@ class FollowersListVC: UIViewController {
         
         view.backgroundColor = .systemBackground
         navigationController?.isNavigationBarHidden = false
+        
+        let favoriteButton = UIBarButtonItem(image: UIImage(systemName: "bookmark"), style: .plain, target: self, action: #selector(addToFavorite))
+        navigationItem.rightBarButtonItem = favoriteButton
+    }
+    
+    @objc func addToFavorite() {
+        GFActivityIndicator.shared.show()
+        followersViewModel.getUserInfo(for: username)
     }
     
     private func configureCollectionView() {
@@ -118,6 +130,11 @@ extension FollowersListVC: FollowersListDelegate {
         updateCollectionView(on: followersViewModel.getFollowers())
     }
     
+    func didAddToFavorites(message: String) {
+        GFActivityIndicator.shared.hide()
+        presentAlertOnMainThread(title: "Add To Favorites", message: message, buttonTitle: "Ok")
+    }
+    
     func showError(message: String) {
         GFActivityIndicator.shared.hide()
         presentAlertOnMainThread(title: "Bad Stuff Happened", message: message, buttonTitle: "Ok")
@@ -144,6 +161,7 @@ extension FollowersListVC: UICollectionViewDelegate {
         let follower = followersViewModel.getFollower(for: indexPath.row)
         
         let userVC = UserProfileViewController()
+        userVC.delegate = self
         userVC.username = follower?.login
         
         let navigationController = UINavigationController(rootViewController: userVC)
@@ -175,5 +193,17 @@ extension FollowersListVC: UISearchBarDelegate {
         searchBar.endEditing(true)
         followersViewModel.isSearching = false
         updateCollectionView(on: followersViewModel.getFollowers())
+    }
+}
+
+//MARK: -
+
+extension FollowersListVC: FollowersListVCDelegate {
+    func didFetchFollowers(for username: String) {
+        self.username = username
+        title = username
+        followersViewModel.resetDataSource()
+        collectionView.setContentOffset(.zero, animated: true)
+        fetchFollowers()
     }
 }
